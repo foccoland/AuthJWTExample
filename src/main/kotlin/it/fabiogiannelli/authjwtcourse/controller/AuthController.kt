@@ -1,10 +1,12 @@
 package it.fabiogiannelli.authjwtcourse.controller
 
+import it.fabiogiannelli.authjwtcourse.dto.AuthResponseDto
 import it.fabiogiannelli.authjwtcourse.dto.LoginDto
 import it.fabiogiannelli.authjwtcourse.dto.RegisterDto
 import it.fabiogiannelli.authjwtcourse.model.UserEntity
 import it.fabiogiannelli.authjwtcourse.repository.RoleRepository
 import it.fabiogiannelli.authjwtcourse.repository.UserRepository
+import it.fabiogiannelli.authjwtcourse.security.JwtTokenGenerator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -23,11 +25,12 @@ class AuthController @Autowired constructor(
     val authenticationManager: AuthenticationManager,
     val userRepository: UserRepository,
     val roleRepository: RoleRepository,
-    val passwordEncoder: PasswordEncoder
+    val passwordEncoder: PasswordEncoder,
+    val tokenGenerator: JwtTokenGenerator
 ) {
 
     @PostMapping("login")
-    fun login(@RequestBody loginDto: LoginDto): ResponseEntity<String> {
+    fun login(@RequestBody loginDto: LoginDto): ResponseEntity<AuthResponseDto> {
         val authentication = authenticationManager
             .authenticate(
                 UsernamePasswordAuthenticationToken(
@@ -36,7 +39,8 @@ class AuthController @Autowired constructor(
                 )
             )
         SecurityContextHolder.getContext().authentication = authentication
-        return ResponseEntity("User signed success!", HttpStatus.OK)
+        val token = tokenGenerator.generateToken(authentication)
+        return ResponseEntity(AuthResponseDto(token), HttpStatus.OK)
     }
 
     @PostMapping("register")

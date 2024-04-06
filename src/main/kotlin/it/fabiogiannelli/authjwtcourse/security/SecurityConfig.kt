@@ -4,26 +4,39 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
 @EnableWebSecurity
-class SecurityConfig @Autowired constructor(val customUserDetailService: CustomUserDetailService) {
+class SecurityConfig @Autowired constructor(
+    val customUserDetailService: CustomUserDetailService,
+    val authEntryPoint: JwtAuthEntryPoint
+) {
 
     @Bean
     @Throws(Exception::class)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        return http
+        var http = http
             .csrf { it.disable() }
+            .exceptionHandling { handler ->
+                handler.authenticationEntryPoint(authEntryPoint)
+            }
+            // for enabling sessionManagement it's necessary to make policy STATELESS
+            .sessionManagement { management ->
+                management.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
             .authorizeHttpRequests { request ->
                     request
                         .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -31,12 +44,13 @@ class SecurityConfig @Autowired constructor(val customUserDetailService: CustomU
                         .anyRequest().authenticated()
             }
             .httpBasic(withDefaults())
-            .build()
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter::class.java)
+        return http.build()
     }
 
 //    Have to comment cause at the moment
 //    the current UserDetailService is CustomUserDetailService class
-//    
+//
 //    @Bean
 //    @Throws(Exception::class)
 //    fun users(): UserDetailsService {
@@ -67,5 +81,10 @@ class SecurityConfig @Autowired constructor(val customUserDetailService: CustomU
     @Bean
     fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
+    }
+
+    @Bean
+    fun jwtAuthenticationFilter(): JwtAuthenticationFilter {
+        return JwtAuthenticationFilter()
     }
 }
