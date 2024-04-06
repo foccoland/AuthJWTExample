@@ -27,29 +27,32 @@ class SecurityConfig @Autowired constructor(val customUserDetailService: CustomU
             .authorizeHttpRequests { request ->
                     request
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/auth/**").authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
             }
             .httpBasic(withDefaults())
             .build()
     }
 
-    @Bean
-    @Throws(Exception::class)
-    fun users(): UserDetailsService {
-        val admin = User.builder()
-            .username("admin")
-            .password("admin")
-            .roles("ADMIN")
-            .build()
-        val fabio = User.builder()
-            .username("fabio")
-            .password("6715")
-            .roles("USER")
-            .build()
-
-        return InMemoryUserDetailsManager(admin, fabio)
-    }
+//    Have to comment cause at the moment
+//    the current UserDetailService is CustomUserDetailService class
+//    
+//    @Bean
+//    @Throws(Exception::class)
+//    fun users(): UserDetailsService {
+//        val admin = User.builder()
+//            .username("admin")
+//            .password("admin")
+//            .roles("ADMIN")
+//            .build()
+//        val fabio = User.builder()
+//            .username("fabio")
+//            .password("6715")
+//            .roles("USER")
+//            .build()
+//
+//        return InMemoryUserDetailsManager(admin, fabio)
+//    }
 
     // Here comes the authManager after creating CustomuserDetailService
     @Bean
