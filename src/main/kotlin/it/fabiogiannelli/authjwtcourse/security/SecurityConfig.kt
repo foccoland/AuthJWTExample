@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 class SecurityConfig @Autowired constructor(
     val customUserDetailService: CustomUserDetailsService,
+    val jwtTokenGenerator: JwtTokenGenerator,
     val authEntryPoint: JwtAuthEntryPoint
 ) {
 
@@ -47,7 +48,7 @@ class SecurityConfig @Autowired constructor(
             .logout { logout ->
                 logout.logoutUrl("/api/auth/logout")
             }
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(jwtAuthenticationFilter(jwtTokenGenerator, customUserDetailService), UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
     }
@@ -88,7 +89,13 @@ class SecurityConfig @Autowired constructor(
     }
 
     @Bean
-    fun jwtAuthenticationFilter(): JwtAuthenticationFilter {
-        return JwtAuthenticationFilter()
+    fun jwtAuthenticationFilter(
+        tokenGenerator: JwtTokenGenerator,
+        customUserDetailsService: CustomUserDetailsService
+    ): JwtAuthenticationFilter {
+        return JwtAuthenticationFilter(
+            tokenGenerator,
+            customUserDetailsService
+        )
     }
 }

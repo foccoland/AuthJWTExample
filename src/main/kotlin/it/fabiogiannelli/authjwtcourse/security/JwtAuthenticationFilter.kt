@@ -11,10 +11,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
 
-class JwtAuthenticationFilter: OncePerRequestFilter() {
-
-    @Autowired val tokenGenerator: JwtTokenGenerator? = null
-    @Autowired val customUserDetailsService: CustomUserDetailsService? = null
+class JwtAuthenticationFilter(
+    val tokenGenerator: JwtTokenGenerator? = null,
+    val customUserDetailsService: CustomUserDetailsService? = null
+): OncePerRequestFilter() {
 
     @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(
