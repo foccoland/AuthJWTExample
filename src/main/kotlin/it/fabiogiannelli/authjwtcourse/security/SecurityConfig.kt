@@ -20,15 +20,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-class SecurityConfig @Autowired constructor(
-    val customUserDetailService: CustomUserDetailsService,
-    val jwtTokenGenerator: JwtTokenGenerator,
-    val authEntryPoint: JwtAuthEntryPoint
-) {
+class SecurityConfig {
 
     @Bean
     @Throws(Exception::class)
-    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+    fun filterChain(
+        http: HttpSecurity,
+        authEntryPoint: JwtAuthEntryPoint,
+        customUserDetailService: CustomUserDetailsService,
+        jwtTokenGenerator: JwtTokenGenerator,
+    ): SecurityFilterChain {
         var http = http
             .csrf { it.disable() }
             .exceptionHandling { handler ->
@@ -48,7 +49,12 @@ class SecurityConfig @Autowired constructor(
             .logout { logout ->
                 logout.logoutUrl("/api/auth/logout")
             }
-            .addFilterBefore(jwtAuthenticationFilter(jwtTokenGenerator, customUserDetailService), UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(
+                jwtAuthenticationFilter(
+                    jwtTokenGenerator,
+                    customUserDetailService
+                ), UsernamePasswordAuthenticationFilter::class.java
+            )
 
         return http.build()
     }
