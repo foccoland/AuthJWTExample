@@ -43,6 +43,11 @@ class AuthController @Autowired constructor(
         return ResponseEntity(AuthResponseDto(token), HttpStatus.OK)
     }
 
+    @PostMapping("logout")
+    fun logout(): ResponseEntity<String> {
+        return ResponseEntity("Logout successful.", HttpStatus.OK)
+    }
+
     @PostMapping("register")
     fun register(@RequestBody registerDto: RegisterDto): ResponseEntity<String> {
         if (userRepository.existsByUsername(registerDto.username)) {

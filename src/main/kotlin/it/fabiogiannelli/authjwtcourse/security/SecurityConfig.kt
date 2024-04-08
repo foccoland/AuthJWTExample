@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 class SecurityConfig @Autowired constructor(
-    val customUserDetailService: CustomUserDetailService,
+    val customUserDetailService: CustomUserDetailsService,
     val authEntryPoint: JwtAuthEntryPoint
 ) {
 
@@ -33,7 +33,7 @@ class SecurityConfig @Autowired constructor(
             .exceptionHandling { handler ->
                 handler.authenticationEntryPoint(authEntryPoint)
             }
-            // for enabling sessionManagement it's necessary to make policy STATELESS
+            // for enabling sessionManagement it's mandatory to make policy STATELESS
             .sessionManagement { management ->
                 management.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
@@ -44,7 +44,11 @@ class SecurityConfig @Autowired constructor(
                         .anyRequest().authenticated()
             }
             .httpBasic(withDefaults())
+            .logout { logout ->
+                logout.logoutUrl("/api/auth/logout")
+            }
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter::class.java)
+
         return http.build()
     }
 
